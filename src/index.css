@@ -1,0 +1,118 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-pixel: "Silkscreen", monospace;
+    --font-mono: "JetBrains Mono", monospace;
+    --font-sans: "Noto Sans KR", system-ui, -apple-system, sans-serif;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: #14171f;
+    color: #f1f5f9;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+  }
+}
+
+.font-pixel {
+  font-family: var(--font-pixel);
+}
+
+.font-mono-tabular {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.pixel-grid-bg {
+  background-color: #14171f;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.pixel-panel {
+  background-color: #1c202b;
+  border: 2px solid #2d3446;
+  box-shadow: 0 4px 0 #0d1017;
+}
+
+.pixel-btn {
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.55);
+  transition: transform 90ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 90ms cubic-bezier(0.16, 1, 0.3, 1), background-color 140ms ease;
+}
+
+.pixel-btn:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.55);
+}
+
+@keyframes legalPulse {
+  0%, 100% {
+    transform: scale(0.88);
+    opacity: 0.78;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+}
+
+@keyframes captureTarget {
+  0%, 100% {
+    transform: scale(0.95);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.04);
+    opacity: 1;
+  }
+}
+
+@keyframes pixelBurst {
+  0% {
+    transform: scale(0.4);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+@keyframes checkFlash {
+  0%, 100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+.animate-legal-pulse {
+  animation: legalPulse 1.15s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+.animate-capture-target {
+  animation: captureTarget 0.95s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+.animate-pixel-burst {
+  animation: pixelBurst 320ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-check-flash {
+  animation: checkFlash 1s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-legal-pulse,
+  .animate-capture-target,
+  .animate-pixel-burst,
+  .animate-check-flash {
+    animation: none !important;
+  }
+}

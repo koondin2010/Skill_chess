@@ -1,0 +1,207 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_-]+$');
+    }
+
+    function isValidLeaderboardUser(data) {
+      return data.keys().hasAll([
+          'uid',
+          'displayName',
+          'skillRating',
+          'skillWins',
+          'skillLosses',
+          'skillDraws',
+          'classicRating',
+          'classicWins',
+          'classicLosses',
+          'classicDraws',
+          'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'uid',
+          'displayName',
+          'photoURL',
+          'ratingEpoch',
+          'skillRating',
+          'skillWins',
+          'skillLosses',
+          'skillDraws',
+          'classicRating',
+          'classicWins',
+          'classicLosses',
+          'classicDraws',
+          'updatedAt'
+        ]) &&
+        data.uid is string && data.uid.size() >= 1 && data.uid.size() <= 128 &&
+        data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 40 &&
+        (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 512)) &&
+        (!('ratingEpoch' in data) || (data.ratingEpoch is int && data.ratingEpoch >= 1 && data.ratingEpoch <= 100)) &&
+        data.skillRating is int && data.skillRating >= 0 && data.skillRating <= 10000 &&
+        data.classicRating is int && data.classicRating >= 0 && data.classicRating <= 10000 &&
+        data.skillWins is int && data.skillWins >= 0 && data.skillWins <= 100000 &&
+        data.skillLosses is int && data.skillLosses >= 0 && data.skillLosses <= 100000 &&
+        data.skillDraws is int && data.skillDraws >= 0 && data.skillDraws <= 100000 &&
+        data.classicWins is int && data.classicWins >= 0 && data.classicWins <= 100000 &&
+        data.classicLosses is int && data.classicLosses >= 0 && data.classicLosses <= 100000 &&
+        data.classicDraws is int && data.classicDraws >= 0 && data.classicDraws <= 100000 &&
+        data.updatedAt == request.time;
+    }
+
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['uid', 'email', 'displayName', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['uid', 'email', 'displayName', 'photoURL', 'createdAt', 'updatedAt']) &&
+        data.uid is string && data.uid.size() >= 1 && data.uid.size() <= 128 &&
+        data.email is string && data.email.size() >= 3 && data.email.size() <= 254 &&
+        data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 40 &&
+        (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 512)) &&
+        data.createdAt is timestamp &&
+        data.updatedAt == request.time;
+    }
+
+    function isValidSavedMatch(data) {
+      return data.keys().hasAll([
+          'matchId',
+          'playedAt',
+          'opponentMode',
+          'ruleMode',
+          'opponentLabel',
+          'myColor',
+          'winner',
+          'resultMessage',
+          'ratingCategory',
+          'ratingDelta',
+          'materialDiff',
+          'plyCount',
+          'movesJson',
+          'createdAt'
+        ]) &&
+        data.keys().hasOnly([
+          'matchId',
+          'playedAt',
+          'opponentMode',
+          'ruleMode',
+          'opponentLabel',
+          'myColor',
+          'winner',
+          'resultMessage',
+          'ratingCategory',
+          'ratingDelta',
+          'materialDiff',
+          'plyCount',
+          'movesJson',
+          'createdAt'
+        ]) &&
+        data.matchId is string && data.matchId.size() >= 3 && data.matchId.size() <= 128 &&
+        data.playedAt is string && data.playedAt.size() >= 10 && data.playedAt.size() <= 64 &&
+        data.opponentMode in ['ai', 'online'] &&
+        data.ruleMode in ['classic', 'skill', 'chess960'] &&
+        data.opponentLabel is string && data.opponentLabel.size() >= 1 && data.opponentLabel.size() <= 64 &&
+        data.myColor in ['w', 'b', 'spectator'] &&
+        data.winner in ['w', 'b', 'draw'] &&
+        data.resultMessage is string && data.resultMessage.size() >= 1 && data.resultMessage.size() <= 160 &&
+        data.ratingCategory in ['skill', 'classic', 'none'] &&
+        data.ratingDelta is int && data.ratingDelta >= -30 && data.ratingDelta <= 30 &&
+        data.materialDiff is int && data.materialDiff >= 0 && data.materialDiff <= 150 &&
+        data.plyCount is int && data.plyCount >= 0 && data.plyCount <= 2000 &&
+        data.movesJson is string && data.movesJson.size() >= 2 && data.movesJson.size() <= 50000 &&
+        data.createdAt == request.time;
+    }
+
+    match /leaderboardUsers/{userId} {
+      allow get, list: if true;
+      allow create: if isOwner(userId) &&
+        isValidId(userId) &&
+        isValidLeaderboardUser(request.resource.data) &&
+        request.resource.data.uid == userId &&
+        (!('ratingEpoch' in request.resource.data) || request.resource.data.ratingEpoch == 2) &&
+        request.resource.data.skillRating == 0 &&
+        request.resource.data.classicRating == 0 &&
+        request.resource.data.skillWins == 0 &&
+        request.resource.data.skillLosses == 0 &&
+        request.resource.data.skillDraws == 0 &&
+        request.resource.data.classicWins == 0 &&
+        request.resource.data.classicLosses == 0 &&
+        request.resource.data.classicDraws == 0;
+      allow update: if isOwner(userId) &&
+        isValidId(userId) &&
+        isValidLeaderboardUser(request.resource.data) &&
+        request.resource.data.uid == resource.data.uid &&
+        (!('ratingEpoch' in request.resource.data) || request.resource.data.ratingEpoch == 2) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'displayName',
+          'photoURL',
+          'ratingEpoch',
+          'skillRating',
+          'skillWins',
+          'skillLosses',
+          'skillDraws',
+          'classicRating',
+          'classicWins',
+          'classicLosses',
+          'classicDraws',
+          'updatedAt'
+        ]) &&
+        (
+          ((request.resource.data.skillRating - resource.data.skillRating) <= 30 &&
+            (request.resource.data.skillRating - resource.data.skillRating) >= -30) ||
+          ((!('ratingEpoch' in resource.data) || resource.data.ratingEpoch < 2) &&
+            request.resource.data.ratingEpoch == 2 &&
+            request.resource.data.skillRating == 0)
+        ) &&
+        (
+          ((request.resource.data.classicRating - resource.data.classicRating) <= 30 &&
+            (request.resource.data.classicRating - resource.data.classicRating) >= -30) ||
+          ((!('ratingEpoch' in resource.data) || resource.data.ratingEpoch < 2) &&
+            request.resource.data.ratingEpoch == 2 &&
+            request.resource.data.classicRating == 0)
+        );
+      allow delete: if false;
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) &&
+        isValidId(userId) &&
+        isValidUserProfile(request.resource.data) &&
+        request.resource.data.uid == userId &&
+        request.resource.data.createdAt == request.time;
+      allow update: if isOwner(userId) &&
+        isValidId(userId) &&
+        isValidUserProfile(request.resource.data) &&
+        request.resource.data.uid == resource.data.uid &&
+        request.resource.data.createdAt == resource.data.createdAt &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'email',
+          'displayName',
+          'photoURL',
+          'updatedAt'
+        ]);
+      allow delete: if false;
+
+      match /matches/{matchId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) &&
+          isValidId(matchId) &&
+          isValidSavedMatch(request.resource.data) &&
+          request.resource.data.matchId == matchId;
+        allow update: if false;
+        allow delete: if isOwner(userId);
+      }
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

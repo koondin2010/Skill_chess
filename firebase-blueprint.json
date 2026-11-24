@@ -1,0 +1,105 @@
+{
+  "entities": {
+    "LeaderboardUser": {
+      "title": "LeaderboardUser",
+      "description": "Public ranking summary for dual Skill and Classic chess ladders (no PII).",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "ratingEpoch": { "type": "integer" },
+        "skillRating": { "type": "integer" },
+        "skillWins": { "type": "integer" },
+        "skillLosses": { "type": "integer" },
+        "skillDraws": { "type": "integer" },
+        "classicRating": { "type": "integer" },
+        "classicWins": { "type": "integer" },
+        "classicLosses": { "type": "integer" },
+        "classicDraws": { "type": "integer" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "uid",
+        "displayName",
+        "skillRating",
+        "skillWins",
+        "skillLosses",
+        "skillDraws",
+        "classicRating",
+        "classicWins",
+        "classicLosses",
+        "classicDraws",
+        "updatedAt"
+      ]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Private authenticated user profile storing Google account email and metadata.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "displayName", "createdAt", "updatedAt"]
+    },
+    "SavedMatch": {
+      "title": "SavedMatch",
+      "description": "Persisted match history entry owned by an authenticated user.",
+      "type": "object",
+      "properties": {
+        "matchId": { "type": "string" },
+        "playedAt": { "type": "string" },
+        "opponentMode": { "type": "string", "enum": ["ai", "online"] },
+        "ruleMode": { "type": "string", "enum": ["classic", "skill", "chess960"] },
+        "opponentLabel": { "type": "string" },
+        "myColor": { "type": "string", "enum": ["w", "b", "spectator"] },
+        "winner": { "type": "string", "enum": ["w", "b", "draw"] },
+        "resultMessage": { "type": "string" },
+        "ratingCategory": { "type": "string", "enum": ["skill", "classic", "none"] },
+        "ratingDelta": { "type": "integer" },
+        "materialDiff": { "type": "integer" },
+        "plyCount": { "type": "integer" },
+        "movesJson": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "matchId",
+        "playedAt",
+        "opponentMode",
+        "ruleMode",
+        "opponentLabel",
+        "myColor",
+        "winner",
+        "resultMessage",
+        "ratingCategory",
+        "ratingDelta",
+        "materialDiff",
+        "plyCount",
+        "movesJson",
+        "createdAt"
+      ]
+    }
+  },
+  "auth": {
+    "providers": ["google.com"]
+  },
+  "firestore": {
+    "/leaderboardUsers/{userId}": {
+      "schema": { "$ref": "#/entities/LeaderboardUser" },
+      "description": "Public leaderboard ratings for all signed-in players."
+    },
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Private user account profile owned by userId."
+    },
+    "/users/{userId}/matches/{matchId}": {
+      "schema": { "$ref": "#/entities/SavedMatch" },
+      "description": "Completed match records and notation owned by userId."
+    }
+  }
+}
